@@ -7,7 +7,7 @@
 + 优化DrawerLayout自身事件拦截机制，适配侧边栏及主界面事件处理逻辑
 + 持续更新优化中...
 
-### 效果视频预览
+### 效果视频预览（注意视频触摸点位置，支持全屏幕手势交互）
 <img src="https://github.com/ztoString/GestureDragDrawerLayout/blob/main/example.gif" width="300" height="600" alt=""/><br/>
 ### Before Drag
 <img src="https://github.com/ztoString/GestureDragDrawerLayout/blob/main/Drag_in.png" width="200" height="400" alt=""/><br/>
