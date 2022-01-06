@@ -1,2 +1,3 @@
+include ':drawerlayout'
 include ':app'
 rootProject.name = "GestureDragDrawerLayout"
