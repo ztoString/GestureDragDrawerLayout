@@ -1,5 +1,5 @@
 # GestureDragDrawerLayout
-仿抖音App（TikTok app）设置页-侧滑工具栏效果
+#### 仿抖音App（TikTok app）设置页-侧滑工具栏效果
 + 支持全屏幕侧边栏手势滑入/滑出
 + 主界面跟随偏移
 + 解决主页面ScrollView、RecycleView、ViewPager滑动冲突
