@@ -2,4 +2,7 @@
   <component name="ImportFilteringUsageViewSetting">
     <option name="SHOW_IMPORTS" value="false" />
   </component>
+  <component name="ShowUsagesSettings">
+    <option name="IS_FILTER_DUPLICATED_LINE" value="false" />
+  </component>
 </application>
