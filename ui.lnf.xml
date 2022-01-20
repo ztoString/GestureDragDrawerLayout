@@ -1,6 +1,8 @@
 <application>
   <component name="UISettings">
     <option name="EDITOR_TAB_LIMIT" value="20" />
+    <option name="IDE_AA_TYPE" value="Greyscale" />
+    <option name="OVERRIDE_NONIDEA_LAF_FONTS" value="true" />
     <option name="SCROLL_TAB_LAYOUT_IN_EDITOR" value="false" />
     <option name="SHOW_MAIN_TOOLBAR" value="true" />
   </component>
