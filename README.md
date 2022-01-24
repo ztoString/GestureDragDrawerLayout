@@ -12,6 +12,6 @@
 ### Before Drag
 <img src="https://github.com/ztoString/GestureDragDrawerLayout/blob/main/Drag_in.png" width="200" height="400" alt=""/><br/>
 ### After Drag
-<img src="https://github.com/ztoString/GestureDragDrawerLayout/blob/main/Drag_out.png" width="200" height="400" alt=""/><br/>
+
 
 ### 满意的话点点Star吧~~~
