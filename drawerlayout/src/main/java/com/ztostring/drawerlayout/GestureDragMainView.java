@@ -82,8 +82,8 @@ public class GestureDragMainView extends FrameLayout {
     private boolean handleInterceptTouchEvent(MotionEvent event) {
         boolean intercepted = false;
         int action = event.getActionMasked();
-        float x = event.getX();
-        float y = event.getY();
+        float x = event.getRawX();
+        float y = event.getRawY();
         if (action == MotionEvent.ACTION_DOWN) {
             lastMotionX = initialMotionX = x;
             initialMotionY = y;
@@ -117,7 +117,12 @@ public class GestureDragMainView extends FrameLayout {
         int action = event.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_MOVE: {
+                Log.d("zt- ACTION_MOVE: ", "-----------move-----------");
                 float diffX = x - initialMotionX;
+                Log.d("zt- diffX: ", String.valueOf(diffX));
+                Log.d("zt- drawerLayout isDrawerOpen: ", String.valueOf(drawerLayout.isDrawerOpen(gravity)));
+                View drawerView = findDrawerWithGravity(Gravity.LEFT) != null ? findDrawerWithGravity(Gravity.LEFT) : findDrawerWithGravity(Gravity.RIGHT);
+                Log.d("zt- drawerLayout isDrawerVisible: ", String.valueOf(drawerView.getVisibility() == VISIBLE));
                 if (!isDrawerEnabled(diffX)) {
                     return false;
                 }
@@ -129,7 +134,7 @@ public class GestureDragMainView extends FrameLayout {
                 boolean lastDraggingDrawer = isDraggingDrawer;
                 isDraggingDrawer = true;
                 // 1. 位移距离判断打开状态
-                shouldOpenDrawer = absDiffX > distanceThreshold;
+                shouldOpenDrawer = absDiffX > distanceThreshold && !drawerLayout.isDrawerOpen(gravity);
                 /* 计算水平移动速度 */
                 velocityTracker.computeCurrentVelocity(100);
                 float xVelocity = velocityTracker.getXVelocity();
@@ -138,10 +143,11 @@ public class GestureDragMainView extends FrameLayout {
                 xMoveVelocity = xMoveVelocity == 0 ? xVelocity : xMoveVelocity;
                 // fix 当drawerView处于打开状态，继续在Container范围内反方向滑动，会导致drawerView有轻微抖动~~~
                 if (xMoveVelocity > 0 && drawerLayout.isDrawerOpen(Gravity.LEFT) || xMoveVelocity < 0 && drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                    Log.d("zt- xMoveVelocity: ", xMoveVelocity + " drawerLayout防抖动");
                     isDraggingDrawer = false;
                     return false;
                 }
-                offsetDrawer(gravity, absDiffX - swipeSlop);
+                offsetDrawer(gravity, diffX);
                 if (!lastDraggingDrawer) {
                     onDrawerDragging();
                 }
@@ -151,26 +157,29 @@ public class GestureDragMainView extends FrameLayout {
             case MotionEvent.ACTION_UP: {
                 if (isDraggingDrawer) {
                     Log.d("zt- xMoveVelocity:", String.valueOf(xMoveVelocity));
-                    Log.d("zt- shouldOpenDrawer:", String.valueOf(shouldOpenDrawer));
                     boolean fromLeft = (gravity == Gravity.LEFT);
                     // 2. 速度判断打开状态
                     if (xMoveVelocity > xVelocityThreshold) {
-                        shouldOpenDrawer = fromLeft;
+                        shouldOpenDrawer = fromLeft && !drawerLayout.isDrawerOpen(gravity);
                     } else if (xMoveVelocity < -xVelocityThreshold) {
-                        shouldOpenDrawer = !fromLeft;
+                        shouldOpenDrawer = !fromLeft && !drawerLayout.isDrawerOpen(gravity);
                     }
                     // 3. 速度+位移距离判断打开状态（如速度接近，且位移距离接近，亦可满足打开条件）
                     if (abs(x - initialMotionX) / (distanceThreshold * 1f) > 0.5f && xMoveVelocity / (xVelocityThreshold * 1f) > 0.5f) {
-                        shouldOpenDrawer = true;
+                        shouldOpenDrawer = fromLeft && !drawerLayout.isDrawerOpen(gravity);
                     }
+                    Log.d("zt- shouldOpenDrawer:", String.valueOf(shouldOpenDrawer));
                     if (shouldOpenDrawer) {
                         drawerLayout.openDrawer(gravity, true);
+                        Log.d("zt- drawerLayout ", "open!!!!!");
                     } else {
                         drawerLayout.closeDrawer(gravity, true);
+                        Log.d("zt- drawerLayout ", "close!!!!!");
                     }
                     xMoveVelocity = 0;
                 } else { // 由于外部drawerLayout不在进行事件拦截，所以需要我们手动处理点击空白区域收起drawerView的操作
                     drawerLayout.closeDrawer(gravity, true);
+                    Log.d("zt- drawerLayout ", "close!!!!!");
                 }
                 shouldOpenDrawer = false;
                 isDraggingDrawer = false;
@@ -179,6 +188,8 @@ public class GestureDragMainView extends FrameLayout {
                     velocityTracker = null;
                 }
             }
+            default:
+                break;
         }
         return true;
     }
@@ -216,8 +227,8 @@ public class GestureDragMainView extends FrameLayout {
     }
 
     private boolean isDrawerEnabled(float direction) {
-        return direction > 0 && hasEnabledDrawer(Gravity.LEFT)
-                || direction < 0 && hasEnabledDrawer(Gravity.RIGHT);
+        return (direction > 0 && !drawerLayout.isDrawerOpen(gravity) || direction < 0 && drawerLayout.isDrawerOpen(gravity)) && hasEnabledDrawer(Gravity.LEFT)
+                || (direction < 0 && !drawerLayout.isDrawerOpen(gravity) || direction > 0 && drawerLayout.isDrawerOpen(gravity)) && hasEnabledDrawer(Gravity.RIGHT);
     }
 
     private int dipsToPixels(int dips) {
@@ -251,8 +262,20 @@ public class GestureDragMainView extends FrameLayout {
     }
 
     private void offsetDrawer(int gravity, float offset) {
+        Log.d("zt- offsetDrawer: ", String.valueOf(offset));
         View drawerView = findDrawerWithGravity(gravity);
-        float slideOffsetPercent = MathUtils.clamp(offset / requireNonNull(drawerView).getWidth(), 0f, 1f);
+        float slideOffsetPercent = MathUtils.clamp((Math.abs(offset) - swipeSlop) / requireNonNull(drawerView).getWidth(), 0f, 1f);
+        slideOffsetPercent = Math.min(Math.max(slideOffsetPercent, 0.01f), 0.99f);
+        if (gravity == Gravity.LEFT) {
+            if (drawerLayout.isDrawerOpen(gravity) && offset < 0) {
+                slideOffsetPercent = 1f - slideOffsetPercent;
+            }
+        } else if (gravity == Gravity.RIGHT) {
+            if (drawerLayout.isDrawerOpen(gravity) && offset > 0) {
+                slideOffsetPercent = 1f - slideOffsetPercent;
+            }
+        }
+        Log.d("zt- offsetDrawer slideOffsetPercent: ", String.valueOf(slideOffsetPercent));
         try {
             Method method = DrawerLayout.class.getDeclaredMethod("moveDrawerToOffset", View.class, float.class);
             method.setAccessible(true);
